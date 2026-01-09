@@ -4,6 +4,7 @@ from pathlib import Path
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
+
 def save_figure(fig, filename: str | Path):
     figure_dir = Path("../project-report/img").resolve()
     f = figure_dir / filename
@@ -14,9 +15,10 @@ def save_figure(fig, filename: str | Path):
 def overlay_terrain_contours(contours, ax, cmap="hot", **kwargs):
     n = len(contours)
     cmap = plt.colormaps.get_cmap(cmap)
-    ax.set_prop_cycle('color', [cmap(i) for i in jnp.linspace(0, 1, n)])
+    ax.set_prop_cycle("color", [cmap(i) for i in jnp.linspace(0, 1, n)])
     for i in range(n):
         ax.plot(*contours[i].T, **kwargs)
+
 
 def render_frame(frame, heightmap, cmap=None):
     x = jnp.clip(frame, 0, 1)

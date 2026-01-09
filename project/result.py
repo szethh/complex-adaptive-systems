@@ -4,8 +4,9 @@
 import jax
 import jax.numpy as jnp
 from dataclasses import dataclass
-from pathlib import Path
-import grid, bunny, plot
+import grid
+import bunny
+
 
 @dataclass
 class Result:
@@ -20,7 +21,7 @@ class Result:
         steps_per_frame=20,
         w=320,
         h=320,
-        key_n=42
+        key_n=42,
     ):
         """
         nS: number of bunny species
@@ -33,67 +34,46 @@ class Result:
         self.nS = max_ns or nK - 1
         self.actual_nK = self.nS + 1
 
-        self.s0, self.heightmap = grid.reset_grid(self.w, self.h, self.actual_nK, key_n=key_n)
+        self.s0, self.heightmap = grid.reset_grid(
+            self.w, self.h, self.actual_nK, key_n=key_n
+        )
         self.gc = grass_consumption
 
         self.flat_terrain = flat_terrain  # for disabling the terrain
         if self.flat_terrain:
             self.heightmap = jnp.zeros((w, h))
 
-        self.gc = jnp.full((self.nS,), 0.95) if grass_consumption is None else grass_consumption
+        self.gc = (
+            jnp.full((self.nS,), 0.95)
+            if grass_consumption is None
+            else grass_consumption
+        )
         self.mix_eps = mix_eps
 
         self.solver = bunny.bunny_dynamics(
             dK[: self.actual_nK],
             dt,
             feed=0.0367,
-            kill=jnp.array([0.0649, 0.05])[:self.nS],
-            reproduction=jnp.array([1.0, 0.75])[:self.nS],
+            kill=jnp.array([0.0649, 0.05])[: self.nS],
+            reproduction=jnp.array([1.0, 0.75])[: self.nS],
             grass_consumption=self.gc,
             terrain=self.heightmap,
-            mix_eps=self.mix_eps
+            mix_eps=self.mix_eps,
         )
 
         # step over the solver but not every single frame
         self.stepper = jax.jit(bunny.step_n(self.solver, steps_per_frame))
 
-        self.xs = self.xs_history = None
-
         self.contours = [] if self.flat_terrain else grid.get_contours(self.heightmap)
 
     def _fmt_(self):
         a = f"{self.w}x{self.h}_b{self.nS}"
-        if self.mix_eps > 0.:
+        if self.mix_eps > 0.0:
             a += "_mix"
         if self.flat_terrain:
             a += "_flat"
         return a
 
     def simulate(self, max_steps=750):
-        self.xs, self.xs_history = jax.lax.scan(self.stepper, self.s0, length=max_steps)
-
-        # return self.xs, self.xs_history
-
-    def render(self, idx=-1, cmap=None):
-        if self.xs is None or self.xs_history is None:
-            raise ValueError("call simulate first")
-
-        return plot.render_frame(self.xs_history[idx], self.heightmap, cmap)
-
-    def print_at(self, save_at: set = {50, 100, 250, 500}, cmap=None, save_dir: Path | None=None):
-        if self.xs is None or self.xs_history is None:
-            raise ValueError("call simulate first")
-        save_at = jnp.array(sorted(
-            save_at.union({0, len(self.xs_history)})
-        ), dtype=jnp.int16)
-
-        rgbs = jax.vmap(self.render, (0, None))(save_at, cmap)
-
-        if save_dir is not None:
-            for r, i in zip(rgbs, save_at):
-                fname = save_dir / f"{self._fmt_()}_i{i}.png"
-                iio.imwrite(fname, r)
-                print("Saved to", fname)
-
-        return rgbs, save_at
-
+        xs, xs_history = jax.lax.scan(self.stepper, self.s0, length=max_steps)
+        return xs, xs_history
