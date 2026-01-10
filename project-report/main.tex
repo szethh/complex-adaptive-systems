@@ -219,6 +219,9 @@ This has the advantage of letting us see the terrain areas where snow hares mana
 
 \section{Conclusions}\label{conclusions}
 
+A possible addition to this project, not implemented due to time and page limitations, is to attempt to control the system with an external force, such as the weather. We would then apply standard model predictive control to our system. With a numeric objective such as ecological biodiversity (maintaining all species alive), we could use \verb|jax.grad| to compute the optimal update and run gradient descent. We could then find optimal weather patterns that make our ecosystem maximize our chosen objective. I leave this idea as `future work', since it falls outside this project's scope.
+
+Overall, this project has provided me with lots of insights into modeling biological systems. Finding states where the system remained steady and did not spiral towards extinction was a challenge; and implementing the dynamics themselves was a great Jax learning exercise.
 
 
 
