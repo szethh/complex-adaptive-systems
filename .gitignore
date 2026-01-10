@@ -9,3 +9,10 @@ wheels/
 # Virtual environments
 .venv
 .direnv
+
+*.npy
+**/.DS_Store
+**/.ipynb_checkpoints
+out/*
+!out/*.pdf
+project/out/pics
