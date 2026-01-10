@@ -18,6 +18,26 @@
         "type": "github"
       }
     },
+    "nix-latex": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1746533071,
+        "narHash": "sha256-DecBZotnGlPSbpLoBi86H57lwNifP7EfUiAEGGUwouY=",
+        "owner": "szethh",
+        "repo": "nix-latex",
+        "rev": "788aacb1bb0944d084111315d7a12a47f4bfcb35",
+        "type": "github"
+      },
+      "original": {
+        "owner": "szethh",
+        "repo": "nix-latex",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1764831616,
@@ -37,6 +57,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "nix-latex": "nix-latex",
         "nixpkgs": "nixpkgs"
       }
     },

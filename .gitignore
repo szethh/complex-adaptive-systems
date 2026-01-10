@@ -11,5 +11,8 @@ wheels/
 .direnv
 
 *.npy
-*.DS_Store
+**/.DS_Store
 **/.ipynb_checkpoints
+out/*
+!out/*.pdf
+project/out/pics

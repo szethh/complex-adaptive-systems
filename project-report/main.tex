@@ -1,0 +1,276 @@
+\documentclass{article}
+
+% to avoid loading the natbib package, add option nonatbib:
+\usepackage[nonatbib, final]{neurips_2024}
+
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+\usepackage[backend=biber,
+    style=numeric,
+    citestyle=numeric-comp,
+    sorting=none
+]{biblatex}
+\addbibresource{bibliography.bib}
+\usepackage{multicol}
+
+
+\title{Ecosystem simulation}
+
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  Clara Periago --- s1067476\\
+  Complex Adaptive Systems --- Final Project\\
+  Radboud University\\
+  January 2026 \\
+  % \texttt{hippo@cs.cranberry-lemon.edu} \\
+  % examples of more authors
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
+
+\begin{document}
+
+
+\maketitle
+
+
+% \begin{abstract}
+%   The abstract paragraph should be indented \nicefrac{1}{2}~inch (3~picas) on
+%   both the left- and right-hand margins. Use 10~point type, with a vertical
+%   spacing (leading) of 11~points.  The word \textbf{Abstract} must be centered,
+%   bold, and in point size 12. Two line spaces precede the abstract. The abstract
+%   must be limited to one paragraph.
+% \end{abstract}
+
+
+\section{Introduction}\label{intro}
+
+During the course we have explored dynamical systems that model ecological populations, namely the Lotka-Volterra equations. These, however, only track the number of individuals of a species over time, but not across the spatial domain. To this end, this project will focus on simulating a spatial grid with competing animal species and how their population arrangements evolve across time. More specifically, we will look at the case of rabbits (also often referred in code as bunnies), and how their feeding and reproduction behavior forms so-called Turing patterns (\cite{Turing1952}) and other complex fenomena.
+
+\section{Methods}\label{methods}
+
+The system we describe in our simulations was derived from the Gray-Scott model~\cite{gray1983autocatalytic}, with help from the implementation by~\cite{BioModeling}. There are three main equations that drive the system:
+
+\begin{gather}
+  R  = r \cdot G \cdot B^2 + 0.01 \cdot r \cdot G \cdot B
+  \label{eq:R}                                                           \\
+  dB = R - (kill + feed)B
+  \label{eq:dB}                                                          \\
+  dG = feed (K_G - G) - \sum_{s=0}^S (gc_s \cdot R_s)
+  \label{eq:dG}
+\end{gather}
+
+Equation~\ref{eq:R} shows the basis for rabbit reproduction \(R\), given existing values of grass \(G\), bunnies \(B\) and a reproduction constant \(r\). The first term in the equation was taken from the Gray-Scott Model~\cite{gray1983autocatalytic}, which originally meant to represent two chemical species \(G\) and \(B\) which react with a given reaction constant \(r\). The squared term for the second species is useful in our biological example, since it is akin to saying that one concentration of grass and two of rabbits are required to produce a new rabbit \(R\).
+
+The second term of the equation (\(0.01 \cdot r \cdot G \cdot B\)) is a balancing term that was added for stability. It is not featured in the Gray-Scott model but was instead useful to keep the system from falling into attractors of complete extinction or single-species domination, which show no interesting visual patterns.
+
+
+The term \(R\) represents the amount of rabbits that have reproduced, but the total change in rabbit population \(dB\) must also take into account the rate \textit{kill} at which rabbits die (equation~\ref{eq:dB}).
+
+Finally, the grass dynamics are represented by a simpler expression~\ref{eq:dG}. It states that grass \(G\) will grow until the maximum carrying capacity \(K_G\) at a rate \textit{feed}, and decays by the amount of born rabbits weighted by their grass consumption (\(gc\)). The carrying capacity is a constant with value \(1\) in the simple example, see the terrain implementation~\ref{terrain} for the location-varying carrying capacity.
+
+
+These three equations drive the `reaction' part of reaction-difussion. The latter is implemented by convolving a Laplacian matrix over the grid across each species. Said matrix has a negative value in the center point, and positive values in its neighbors. This is equivalent to reducing the center cell and `spreading' its value to the neighbors with the given coefficients. This method was also employed by~\cite{BioModeling}. To conserve the same amount of matter in the system (which chemists tend to care about), the sum of our convolution kernel must add up to zero.
+
+
+% describe the equations, how they mirror chemical reaction diffussion and how we expect turing patterns.
+
+% brief technical description: jax + jupyter + fastplotlib (is this needed?)
+
+
+\section{Results}\label{results}
+
+\subsection{Two-species system}
+
+The simplest system we can simulate consists of two entities, a bunny and a grass species. This is the classic setup for reaction difussion, so we can use previously explored parameter values to obtain nice Turing patterns. Following~\cite{BioModeling}, we will use values of feed\(=0.0367\) and kill\(=0.0649\), but there are many other parameter sets that result in complex and self-sustaining Turing patterns.
+
+Figure~\ref{fig:1bflat} shows the evolution of such a system. On \(t_0\), random points on the grid are selected and a small circular patch of bunnies is generated at those locations. The patches spread from their initial locations to form larger rings, and as space becomes limited they arrange in creased lines that alternate between orange and yellow.
+
+The red channel in the image is given by the amount of bunnies in a given pixel, thus we can see that the areas that appear yellow are less habitable (therefore less red) due to increased competition.
+
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\linewidth]{img/320x320_b1_flat_progression.png}
+  \caption{Evolution of the 1-bunny system}\label{fig:1bflat}
+\end{figure}
+
+% \begin{figure}
+%   \centering
+%   \fbox{\rule[-.5cm]{0cm}{4cm} \rule[-.5cm]{4cm}{0cm}}
+%   \caption{Sample figure caption.}
+% \end{figure}
+
+\subsection{Modeling terrain}\label{terrain}
+
+For now our grid has been completely uniform, meaning that the dynamics are independent of the physical location.
+
+That is unlike the ecosystems we aim to simulate, where mountains, rivers and other geological features affect the spread and  conditions of living beings.
+
+To this end, we can simulate terrain by generating a heightmap that assigns an elevation value to each pixel in our grid. Many approaches to generating such smooth terrain-like structures exist, the most famost one being~\cite{Perlin1985}. In our project we use a similar method, namely Simplex noise~\cite{Perlin2002}. See Figure~\ref{fig:grid_setup} in the Appendix~\ref{appendix} for an image of the resulting heightmap.
+
+
+With the terrain heightmap we can influence the system dynamics in a location-sensitive manner. To simplify our methods, the only impact that the terrain will have on the system is to limit the maximum amount of grass that may grow in a tile. This decision was made to simulate the ecological carrying capacity~\cite{Huston1994,del2004carrying} of the tile in question. Terrain areas with higher elevation will have diminished carrying capacity, leading to bunnies having more trouble (or not being able to) colonize said areas. This breaks up the patterns and results in more complex behavior around the peaks and valleys of the grid.
+
+
+% // maybe we can say something about the system in these points? like the valleys/peaks are attractors for a number of bunnies and that depends on the height. so one could predict the number of bunnies (after some time) given the heightmap. maybe link here to system identification under partial info. further research and all that
+
+Figure~\ref{fig:1b} shows a simulation with the same parameters as above, but the resulting patters are not able to fill out the entire space, due to the limited grass in areas with higher elevation.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\linewidth]{img/320x320_b1_progression.png}
+  \caption{Evolution of the 1-bunny system with varying terrain. The last panel shows the contour lines of the terrain overlayed, showing that bunnies tend to prefer the lower elevation valleys (darker lines).}\label{fig:1b}
+\end{figure}
+
+\subsection{More bunny species!}
+
+Given our generic implementation of the system dynamics it is trivial to add more species to the simulation. We choose to now simulate two distinct rabbit species, \textcolor{red}{red} and \textcolor{blue}{blue}. The former has the same parameters as in the simulations above, while the latter has been modified to have a slightly reduced \textit{kill} rate, but at the cost of slower reproduction. The idea behind this second species is a more hardy snow hare which can thrive in different environments but generally gets outcompeted by the standard rabbit.
+
+We also introduce the notion of species mixing. Once we have more than one bunny species, they tend to form very rigid borders and not mix. This results in plots like those seen above, but with some patches being blue and some being red. To break up these strict borders, we can encourage some of the bunnies of a given species to grow in areas where there are not so many of the same species. This is formalized by the expressions:
+
+\begin{gather*}
+  total_B = \sum^S_{s=0} B_s \\
+  dB \leftarrow mix\_eps \cdot (total_B - B) \cdot (G > 0.2)
+\end{gather*}
+
+In short, we compute a total of both species of bunny \(S\), which we use to shift the change in bunny concentration \(dB\) multiplied by some mixing factor \textit{mix\_eps}. There is also a requirement of at least 20\% of the tile being grass, to avoid bunnies shifting into areas where there is no food available.
+
+This significantly changes the output of the simulation, since rabbits are able to spread much more than before.
+
+We no longer see Turing patterns, instead the whole grid is quickly colored in one color or another. Given our settings, the common (\textcolor{red}{red}) rabbit species dominates, pushing the \textcolor{blue}{snow hare} species to smaller areas.
+
+This has the advantage of letting us see the terrain areas where snow hares manage to survive while common rabbits don't.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\linewidth]{img/320x320_b2_mix_progression.png}
+  \caption{Evolution of 2-bunny system with species mixing. Most spaces in the grid are quickly colonized by the common rabbit, and the few snow hare patches slowly shrink. It is notable however that they do not go extinct, and instead settle in the mountain peaks where there is not enough grass to support the normal rabbits. This can be seen in the last subplots, where the contour lines for the mountain correspond near-perfectly with the blue-shaded areas.}\label{fig:b2_mix}
+\end{figure}
+
+% we try adding another, differently parameterized, bunny species to the mix and see how the resulting patterns settle. we make this a snow hare, hardy in the snowy peaks and thus needs less grass to survive, but is slower to reproduce so gets outcompeted in areas where normal bunnies are more likely
+
+% explain how bunny species both want to eat the grass so more bunnie A = less grass for bunnie B
+
+% \section{controlling the weather}
+
+% we can attempt some model predictive control on our system. we first need to define some external force that will alter the dynamics. following the example of the bunny ecosystem, we can use the amount of rainfall as a modulator for the feed/kill rates of the grass. to avoid computational complexity \& lack of time, we assume constant rainfall across the entire space, but further research could implement clouds that interact with the terrain height to create even more complex biome dynamics.
+
+% given our external force, we want to find the most ideal (time-dependent) amount of rain. for this, we also need an objective function. several are proposed in this report:
+
+
+% \begin{itemize}
+
+
+%   \item biodiversity: keeping the most species alive
+%   \item amount of biomass: keeping the most number of individuals alive (weighted?)
+%   \item resulting pattern: this one is cool but i don't know a good way to quantify how "good"/"pretty" a pattern is (or if it even exists in the result) without looking at the image myself. maybe spectral analysis?? if there is one dominant frequency X that means that there is a repeating pattern X times across the image. but the patterns are shifted because of the unevenness of the terrain so maybe we have to ""demean"" the data first (subtracting the heightmap before fft?).
+
+%         in any case make it clear that this is ambitious and just for fun, probably wont have time so it can go in further research.
+
+% \end{itemize}
+
+% once we have a numerical objective we can just do \verb+jax.grad+ and do gradient descent on our rainfall. this is kindof like rainfall being the weights of a NN, and the NN is the system, and we score it given our objective, so we optimize for the best amount of rain.
+
+% \paragraph{Paragraphs}
+% There is also a \verb+\paragraph+ command available, which sets the heading in
+% bold, flush left, and inline with the text, with the heading followed by 1\,em
+% of space.
+
+
+\section{Conclusions}\label{conclusions}
+
+
+
+
+
+% Table~\ref{sample-table}.
+% \begin{table}
+%   \caption{Sample table title}
+%   \label{sample-table}
+%   \centering
+%   \begin{tabular}{lll}
+%     \toprule
+%     \multicolumn{2}{c}{Part}                   \\
+%     \cmidrule(r){1-2}
+%     Name     & Description     & Size ($\mu$m) \\
+%     \midrule
+%     Dendrite & Input terminal  & $\sim$100     \\
+%     Axon     & Output terminal & $\sim$10      \\
+%     Soma     & Cell body       & up to $10^6$  \\
+%     \bottomrule
+%   \end{tabular}
+% \end{table}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\appendix
+
+\section{Appendix}\label{appendix}
+
+\subsection{Starting conditions}
+
+The initial conditions for the grid were selected randomly using a fixed seed. There were \(110\) uniformly sampled points for each species that served as their starting patches.
+
+Similarly, the terrain was generated once at startup with the same numeric seed, and the same heightmap was used for every simulation. Figure~\ref{fig:grid_setup} illustrates this setup.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.6\linewidth]{img/s0.png}
+  \caption{Left: initial patches of bunnies, colored by species. Right: terrain heightmap, higher elevations colored brighter.}\label{fig:grid_setup}
+\end{figure}
+
+\subsection{Source code}
+
+The source code for the simulations, the figures and this report itself can be found at \url{https://github.com/szethh/complex-adaptive-systems}.
+
+\medskip
+
+\small
+% references
+\begin{multicols}{2}[\printbibheading]
+  \printbibliography[heading=none]
+\end{multicols}
+
+
+\end{document}

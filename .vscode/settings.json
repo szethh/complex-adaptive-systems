@@ -1,6 +1,47 @@
 {
-    "jupyter.widgetScriptSources": [
+  "jupyter.widgetScriptSources": [
     "jsdelivr.com",
     "unpkg.com"
-  ]
+  ],
+  "python.languageServer": "Pylance",
+  "notebook.defaultFormatter": "charliermarsh.ruff",
+  "ruff.nativeServer": "on",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "[latex]": {
+    "editor.wordWrap": "on"
+  },
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "compile",
+      "tools": [
+        "pdflatex",
+        "biber",
+        "pdflatex",
+        "pdflatex"
+      ]
+    }
+  ],
+  "latex-workshop.latex.tools": [
+    {
+      "name": "pdflatex",
+      "command": "pdflatex",
+      "args": [
+        "-interaction=nonstopmode",
+        "-output-directory=%WORKSPACE_FOLDER%/out",
+        "%DOC_EXT%"
+      ]
+    },
+    {
+      "name": "biber",
+      "command": "biber",
+      "args": [
+        // "--input-directory=out",
+        "--output-directory=%OUTDIR%",
+        "%DOCFILE%"
+      ]
+    }
+  ],
+  "editor.formatOnSave": true,
 }
