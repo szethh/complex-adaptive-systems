@@ -38,7 +38,7 @@
 
 
 \author{%
-  Clara Periago --- s1067476\\
+  Clara Periago \\
   Complex Adaptive Systems --- Final Project\\
   Radboud University\\
   January 2026 \\
@@ -146,7 +146,7 @@ For now our grid has been completely uniform, meaning that the dynamics are inde
 
 That is unlike the ecosystems we aim to simulate, where mountains, rivers and other geological features affect the spread and  conditions of living beings.
 
-To this end, we can simulate terrain by generating a heightmap that assigns an elevation value to each pixel in our grid. Many approaches to generating such smooth terrain-like structures exist, the most famost one being~\cite{Perlin1985}. In our project we use a similar method, namely Simplex noise~\cite{Perlin2002}. See Figure~\ref{fig:grid_setup} in the Appendix~\ref{appendix} for an image of the resulting heightmap.
+To this end, we can simulate terrain by generating a heightmap that assigns an elevation value to each pixel in our grid. Many approaches to generating such smooth terrain-like structures exist, the most famous one being~\cite{Perlin1985}. In our project we use a similar method, namely Simplex noise~\cite{Perlin2002}. See Figure~\ref{fig:grid_setup} in the Appendix~\ref{appendix} for an image of the resulting heightmap.
 
 
 With the terrain heightmap we can influence the system dynamics in a location-sensitive manner. To simplify our methods, the only impact that the terrain will have on the system is to limit the maximum amount of grass that may grow in a tile. This decision was made to simulate the ecological carrying capacity~\cite{Huston1994,del2004carrying} of the tile in question. Terrain areas with higher elevation will have diminished carrying capacity, leading to bunnies having more trouble (or not being able to) colonize said areas. This breaks up the patterns and results in more complex behavior around the peaks and valleys of the grid.
